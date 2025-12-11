@@ -29,13 +29,29 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $oldName = $user->name;
+        
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        // Sync Avatar Name if it matches the default pattern
+        // This ensures "John's Avatar" becomes "Jane's Avatar" if user renames
+        if ($user->wasChanged('name')) {
+            $avatar = \App\Models\Avatar::where('owner_id', $user->id)->first();
+            // Check if name matches case-insensitively
+            if ($avatar && (
+                strcasecmp($avatar->name, $oldName . "'s Avatar") === 0 || 
+                $avatar->name === 'Avatar'
+            )) {
+                $avatar->update(['name' => $user->name . "'s Avatar"]);
+            }
+        }
 
         return Redirect::route('profile.edit');
     }

@@ -12,10 +12,16 @@ export default function Invite({ relations = [] }) {
     const [generatedLink, setGeneratedLink] = useState('');
 
     const generateLink = () => {
-        // Simulate API call
-        setTimeout(() => {
-            setGeneratedLink(`https://avatar-app.com/invite/${selectedRelation || 'relation_id'}/token_xyz123`);
-        }, 800);
+        if (!selectedRelation) return;
+
+        axios.post(route('relations.invite', selectedRelation.id))
+            .then(res => {
+                setGeneratedLink(res.data.url);
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Could not generate link. Please try again.");
+            });
     };
 
     return (
@@ -40,24 +46,32 @@ export default function Invite({ relations = [] }) {
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">1. Select Recipient</label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Mock Data if empty relations */}
-                            {['Grandma Alice', 'Cousin Ben', 'Mom'].map((name, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => setSelectedRelation(name)}
-                                    className={`
-                                        p-4 rounded-xl border cursor-pointer flex items-center gap-3 transition-all
-                                        ${selectedRelation === name
-                                            ? 'border-brand-primary bg-blue-50/50 ring-2 ring-brand-primary/20'
-                                            : 'border-gray-200 hover:border-brand-primary/50'}
-                                    `}
-                                >
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedRelation === name ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                        {name.charAt(0)}
+                            {relations.length > 0 ? (
+                                relations.map((relation) => (
+                                    <div
+                                        key={relation.id}
+                                        onClick={() => { setSelectedRelation(relation); setGeneratedLink(''); }}
+                                        className={`
+                                            p-4 rounded-xl border cursor-pointer flex items-center gap-3 transition-all
+                                            ${selectedRelation?.id === relation.id
+                                                ? 'border-brand-primary bg-blue-50/50 ring-2 ring-brand-primary/20'
+                                                : 'border-gray-200 hover:border-brand-primary/50'}
+                                        `}
+                                    >
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedRelation?.id === relation.id ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                            {relation.name.charAt(0)}
+                                        </div>
+                                        <span className="font-medium text-gray-900">{relation.name}</span>
                                     </div>
-                                    <span className="font-medium text-gray-900">{name}</span>
+                                ))
+                            ) : (
+                                <div className="col-span-2 text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                    <p className="text-gray-500 mb-2">No family members found.</p>
+                                    <Link href="/family" className="text-brand-primary font-medium hover:underline">
+                                        Create a Family Folder first
+                                    </Link>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 

@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/{avatar}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('chat.show');
     Route::post('/chat/{avatar}/start', [\App\Http\Controllers\ConversationController::class, 'start'])->name('chat.start');
     Route::post('/conversation/{conversation}/end', [\App\Http\Controllers\ConversationController::class, 'end'])->name('chat.end');
+    Route::post('/conversation/{conversation}/message', [\App\Http\Controllers\ConversationController::class, 'message'])->name('chat.message');
 
     // Relations & Memories
     Route::get('/family', [\App\Http\Controllers\RelationController::class, 'index'])->name('family.index');
@@ -44,10 +45,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/memories/{id}', [\App\Http\Controllers\MemoryController::class, 'update'])->name('memories.update');
     
     // Generate Invite (Owner only)
-    Route::get('/share', function () {
-        // Mock data for the prototype
+    Route::get('/share', function (Illuminate\Http\Request $request) {
+        $user = $request->user();
+        $avatar = \App\Models\Avatar::where('owner_id', $user->id)->firstOrFail();
+
         return \Inertia\Inertia::render('Share/Invite', [
-             'relations' => \App\Models\Relation::where('avatar_id', 1)->get() // Simplified for MVP
+             'relations' => $avatar->relations
         ]);
     })->name('share.index');
     

@@ -73,6 +73,26 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function message(Request $request, $conversationId, \App\Services\ChatService $chatService)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $conversation = \App\Models\Conversation::with('avatar.owner')->findOrFail($conversationId);
+        
+        // In a real app, verify user belongs to conversation (Owner or Guest)
+
+        $response = $chatService->generateResponse($conversation, $request->input('message'));
+
+        // Save message to DB (optional for MVP but good for history)
+        // \App\Models\Message::create([...]); 
+
+        return response()->json([
+            'response' => $response,
+        ]);
+    }
+
     public function end(Request $request, $conversationId)
     {
         $conversation = \App\Models\Conversation::findOrFail($conversationId);

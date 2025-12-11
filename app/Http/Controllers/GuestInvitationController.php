@@ -42,10 +42,20 @@ class GuestInvitationController extends Controller
 
         $relation = Relation::with('avatar.owner')->findOrFail($relationId);
 
+        $avatarName = $relation->avatar->name;
+        $ownerName = $relation->avatar->owner->name;
+
+        // Smart Display: If the avatar name looks like a default name (contains "Avatar"),
+        // we prefer using the current Owner's name to ensure it's up-to-date and correctly capitalized.
+        // This fixes issues where the user renames their profile but the avatar name remains stale.
+        if (str_contains(strtolower($avatarName), 'avatar')) {
+             $avatarName = $ownerName . "'s Avatar";
+        }
+
         return Inertia::render('Guest/Welcome', [
             'relation' => $relation,
-            'avatarName' => $relation->avatar->name,
-            'ownerName' => $relation->avatar->owner->name,
+            'avatarName' => $avatarName,
+            'ownerName' => $ownerName,
             // Pass the signature/url info so we can maintain it during registration/login
             'inviteUrl' => $request->fullUrl(), 
         ]);

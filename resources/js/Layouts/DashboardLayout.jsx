@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import Dropdown from '@/Components/Dropdown';
 
 export default function DashboardLayout({ children }) {
     const { auth } = usePage().props;
@@ -18,14 +18,48 @@ export default function DashboardLayout({ children }) {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <div className="text-sm font-medium text-gray-500 hidden sm:block">
-                                Hello, {auth.user.name}
-                            </div>
-                            <img
-                                className="h-8 w-8 rounded-full border border-gray-200"
-                                src={`https://ui-avatars.com/api/?name=${auth.user.name}&background=random`}
-                                alt={auth.user.name}
-                            />
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <span className="inline-flex rounded-md">
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-transparent hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="hidden sm:block text-right">
+                                                    <div className="text-brand-primary font-bold">{auth.user.name}</div>
+                                                    <div className="text-xs text-gray-400">Owner</div>
+                                                </span>
+                                                <img
+                                                    className="h-9 w-9 rounded-full border-2 border-brand-primary/20"
+                                                    src={`https://ui-avatars.com/api/?name=${auth.user.name}&background=315EFF&color=fff`}
+                                                    alt={auth.user.name}
+                                                />
+                                            </div>
+
+                                            <svg
+                                                className="ml-2 -mr-0.5 h-4 w-4"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </span>
+                                </Dropdown.Trigger>
+
+                                <Dropdown.Content>
+                                    <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
+                                    <Dropdown.Link href={route('logout')} method="post" as="button">
+                                        Log Out
+                                    </Dropdown.Link>
+                                </Dropdown.Content>
+                            </Dropdown>
                         </div>
                     </div>
                 </div>
