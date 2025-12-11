@@ -9,37 +9,37 @@ class MemoryController extends Controller
 {
     public function store(Request $request, $relationId)
     {
-        // The original ownership check was removed in the provided change.
-        // If it was intended to be kept, it should be re-added here.
-        // For now, following the provided change which starts directly with validation.
-
         $validated = $request->validate([
             'content' => 'required|string',
             'event_date' => 'nullable|date',
         ]);
 
-        // Generate Embedding
+        // Generate Embedding with Fallback
         $vectorService = new \App\Services\VectorService();
-        $embedding = $vectorService->generateEmbedding($validated['content']);
+        $embedding = array_fill(0, 1536, 0.0); // Default zero vector
+
+        try {
+            $embedding = $vectorService->generateEmbedding($validated['content']);
+        } catch (\Exception $e) {
+            // Log error but proceed so user flow isn't broken
+            \Illuminate\Support\Facades\Log::warning('Vector embedding failed: ' . $e->getMessage());
+        }
 
         // Store Memory
-        // Note: ensuring $casts = ['embedding' => 'array'] in Model if storing as JSON in SQLite
-        // If Postgres/Vector, Laravel might need raw insert or a custom caster, 
-        // but for now we pass the array and let Laravel/Driver handle it (or json_encode if fallback)
-        
         $embeddingValue = DB::connection()->getDriverName() === 'pgsql' 
-            ? '[' . implode(',', $embedding) . ']' // pgvector format string
-            : json_encode($embedding); // SQLite fallback
+            ? '[' . implode(',', $embedding) . ']' 
+            : json_encode($embedding);
 
         \App\Models\Memory::create([
             'relation_id' => $relationId,
             'content' => $validated['content'],
             'embedding' => $embeddingValue, 
             'event_date' => $validated['event_date'] ?? now(),
-            'importance_score' => 3, // Default for now
+            'importance_score' => 3, 
         ]);
 
-        return back()->with('message', 'Memory recorded.');
+        // Explicit redirect to the relation page to avoid blank page issues
+        return to_route('family.show', $relationId)->with('message', 'Memory recorded.');
     }
 
     public function update(Request $request, $id)

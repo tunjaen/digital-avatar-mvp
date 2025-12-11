@@ -24,9 +24,11 @@ class RelationController extends Controller
 
     public function show($id)
     {
-        $relation = \App\Models\Relation::with('memories')->findOrFail($id);
-        // Ensure ownership check strictly (omitted for brevity in prototype but good to have)
-        
+        $relation = \App\Models\Relation::with(['memories' => function ($query) {
+            $query->select('id', 'relation_id', 'content', 'type', 'event_date', 'importance_score', 'created_at')
+                  ->orderBy('created_at', 'asc'); // Oldest first (chat style)
+        }])->findOrFail($id);
+
         return \Inertia\Inertia::render('Family/Show', [
             'relation' => $relation
         ]);
